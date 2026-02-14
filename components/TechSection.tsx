@@ -114,7 +114,7 @@ const TechSection: React.FC<Props> = ({ onTaskComplete, completedTasks }) => {
                       {/* Commands */}
                       {activeContent.labSteps.length > 0 && (
                           <div className="space-y-4">
-                              <h4 className="text-black font-bold bg-cyan-400 inline-block px-2 py-1 rounded">{">>"} EXECUTE_PROTOCOL: {activeContent.labTitle}</h4>
+                              <h4 className="text-black font-bold bg-cyan-400 inline-block px-2 py-1 rounded">>> EXECUTE_PROTOCOL: {activeContent.labTitle}</h4>
                               {activeContent.labSteps.map((step, i) => (
                                   <div key={i} className="group">
                                       <div className="flex gap-4">

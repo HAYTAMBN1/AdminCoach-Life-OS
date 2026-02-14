@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, BookOpen, Calendar, Search, Star, ChevronRight, Loader2, Sunrise, Sun, Sunset, Clock, MapPin } from 'lucide-react';
+import { Moon, BookOpen, Calendar, Search, Star, ChevronRight, Loader2, Sunrise, Sun, Sunset, Clock, MapPin, Settings, X, Check } from 'lucide-react';
 import { Surah } from '../types';
-import { ALADHAN_API_URL } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Types for AlAdhan API
@@ -36,13 +35,32 @@ interface APIResponse {
     };
     meta: {
       timezone: string;
+      method: { name: string };
     }
   };
 }
 
+// Major Moroccan Cities Coordinates
+const CITIES = [
+  { name: 'Martil', lat: 35.6166, lng: -5.2667 },
+  { name: 'Tétouan', lat: 35.5785, lng: -5.3684 },
+  { name: 'Tanger', lat: 35.7595, lng: -5.8340 },
+  { name: 'Rabat', lat: 34.0209, lng: -6.8416 },
+  { name: 'Casablanca', lat: 33.5731, lng: -7.5898 },
+  { name: 'Fès', lat: 34.0181, lng: -5.0078 },
+  { name: 'Marrakech', lat: 31.6295, lng: -7.9811 },
+  { name: 'Agadir', lat: 30.4278, lng: -9.5981 },
+  { name: 'Oujda', lat: 34.6817, lng: -1.9077 },
+  { name: 'Laâyoune', lat: 27.1253, lng: -13.1625 }
+];
+
 const IslamSection: React.FC = () => {
   const [activeView, setActiveView] = useState<'PRAYER' | 'QURAN' | 'CALENDAR'>('PRAYER');
   
+  // Location State
+  const [selectedCity, setSelectedCity] = useState(CITIES[0]);
+  const [showCitySelector, setShowCitySelector] = useState(false);
+
   // Data State
   const [timings, setTimings] = useState<PrayerTimings | null>(null);
   const [hijri, setHijri] = useState<HijriDate | null>(null);
@@ -55,11 +73,14 @@ const IslamSection: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingQuran, setLoadingQuran] = useState(false);
 
-  // Fetch AlAdhan Data (Prayer + Calendar)
+  // Fetch Data (Prayer + Calendar)
   useEffect(() => {
     const fetchData = async () => {
+      setLoadingData(true);
       try {
-        const res = await fetch(ALADHAN_API_URL);
+        // Method 21: Moroccan Ministry of Habous and Islamic Affairs
+        // This ensures compatibility with official Moroccan times (habous.gov.ma)
+        const res = await fetch(`https://api.aladhan.com/v1/timings?latitude=${selectedCity.lat}&longitude=${selectedCity.lng}&method=21`);
         const json: APIResponse = await res.json();
         if (json.data) {
           setTimings(json.data.timings);
@@ -74,7 +95,7 @@ const IslamSection: React.FC = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [selectedCity]);
 
   // Fetch Quran Data
   useEffect(() => {
@@ -131,13 +152,17 @@ const IslamSection: React.FC = () => {
                   <Moon className="text-cyan-400 fill-cyan-400/20" /> 
                   مركز الروحانيات
               </h2>
-              <p className="text-gray-400 font-sans text-sm tracking-wide flex items-center gap-2">
-                 <MapPin size={14} className="text-red-500" /> MARTIL, MOROCCO // LIVE_DATA_STREAM
-              </p>
+              <div className="flex items-center gap-3">
+                  <p className="text-gray-400 font-sans text-sm tracking-wide flex items-center gap-2">
+                     <MapPin size={14} className="text-red-500" /> {selectedCity.name}, MOROCCO
+                  </p>
+                  <span className="text-gray-600 text-xs">|</span>
+                  <p className="text-gray-500 text-xs font-mono">Habous.gov.ma Standard</p>
+              </div>
           </div>
 
           {/* Navigation */}
-          <div className="flex p-1 bg-slate-950/50 border border-gray-800 rounded-2xl backdrop-blur-md">
+          <div className="flex p-1 bg-slate-950/50 border border-gray-800 rounded-2xl backdrop-blur-md overflow-x-auto max-w-full">
               {[
                   { id: 'PRAYER', icon: Clock, label: 'المواقيت' },
                   { id: 'QURAN', icon: BookOpen, label: 'المصحف' },
@@ -146,7 +171,7 @@ const IslamSection: React.FC = () => {
                   <button
                       key={tab.id}
                       onClick={() => setActiveView(tab.id as any)}
-                      className={`relative px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 z-10 ${
+                      className={`relative px-6 py-3 rounded-xl font-bold transition-all flex items-center gap-2 z-10 whitespace-nowrap ${
                           activeView === tab.id ? 'text-white' : 'text-gray-500 hover:text-gray-300'
                       }`}
                   >
@@ -179,6 +204,44 @@ const IslamSection: React.FC = () => {
           >
               {activeView === 'PRAYER' && (
                   <div className="max-w-4xl mx-auto">
+                      <div className="flex justify-end mb-4">
+                          <button 
+                            onClick={() => setShowCitySelector(!showCitySelector)}
+                            className="flex items-center gap-2 text-sm text-cyan-400 bg-cyan-950/30 px-3 py-1.5 rounded-lg border border-cyan-500/30 hover:bg-cyan-900/50 transition-colors"
+                          >
+                              <Settings size={14} /> تغيير المدينة
+                          </button>
+                      </div>
+
+                      <AnimatePresence>
+                      {showCitySelector && (
+                          <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="bg-slate-900 border border-gray-800 rounded-2xl p-4 mb-6 overflow-hidden"
+                          >
+                              <h4 className="text-gray-400 text-sm mb-3">اختر المدينة (Select Location):</h4>
+                              <div className="flex flex-wrap gap-2">
+                                  {CITIES.map(city => (
+                                      <button
+                                        key={city.name}
+                                        onClick={() => { setSelectedCity(city); setShowCitySelector(false); }}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold border transition-all flex items-center gap-2 ${
+                                            selectedCity.name === city.name 
+                                            ? 'bg-cyan-600 text-white border-cyan-400 shadow-lg shadow-cyan-500/20' 
+                                            : 'bg-slate-950 text-gray-400 border-gray-800 hover:border-gray-600'
+                                        }`}
+                                      >
+                                          {city.name}
+                                          {selectedCity.name === city.name && <Check size={14} />}
+                                      </button>
+                                  ))}
+                              </div>
+                          </motion.div>
+                      )}
+                      </AnimatePresence>
+
                       {loadingData ? (
                            <div className="flex justify-center py-20"><Loader2 className="animate-spin text-cyan-500" size={48} /></div>
                       ) : dataError || !timings ? (
