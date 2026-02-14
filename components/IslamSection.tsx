@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Moon, BookOpen, Calendar, Search, Star, ChevronRight, Loader2, Sunrise, Sun, Sunset, Clock, MapPin, Settings, X, Check } from 'lucide-react';
 import { Surah } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
+import { storage, STORAGE_KEYS } from '../services/storage';
 
 // Types for AlAdhan API
 interface PrayerTimings {
@@ -57,9 +58,16 @@ const CITIES = [
 const IslamSection: React.FC = () => {
   const [activeView, setActiveView] = useState<'PRAYER' | 'QURAN' | 'CALENDAR'>('PRAYER');
   
-  // Location State
-  const [selectedCity, setSelectedCity] = useState(CITIES[0]);
+  // Location State - Persistent
+  const [selectedCity, setSelectedCity] = useState(
+      () => storage.get(STORAGE_KEYS.CITY, CITIES[0])
+  );
   const [showCitySelector, setShowCitySelector] = useState(false);
+
+  // Save city on change
+  useEffect(() => {
+      storage.set(STORAGE_KEYS.CITY, selectedCity);
+  }, [selectedCity]);
 
   // Data State
   const [timings, setTimings] = useState<PrayerTimings | null>(null);

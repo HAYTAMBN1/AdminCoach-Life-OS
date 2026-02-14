@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { TabView, CalendarHistory, Todo, DictionaryEntry } from './types';
 import { LEXICON_INITIAL_DATA } from './constants';
+import { storage, STORAGE_KEYS } from './services/storage';
 import Header from './components/Header';
 import GermanSection from './components/GermanSection';
 import TechSection from './components/TechSection';
@@ -108,19 +109,20 @@ const Dashboard: React.FC<{
 // --- Main App ---
 const App: React.FC = () => {
   const [currentTab, setCurrentTab] = useState<TabView>('DASHBOARD');
-  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
-  const [todos, setTodos] = useState<Todo[]>(() => {
-      const saved = localStorage.getItem('haytham_todos');
-      return saved ? JSON.parse(saved) : [];
-  });
-  const [xp, setXp] = useState(1250);
-  const [dictionary, setDictionary] = useState<DictionaryEntry[]>([]);
-  const [history, setHistory] = useState<CalendarHistory>({});
+  
+  // Persistent State
+  const [todos, setTodos] = useState<Todo[]>(() => storage.get(STORAGE_KEYS.TODOS, []));
+  const [completedTasks, setCompletedTasks] = useState<string[]>(() => storage.get(STORAGE_KEYS.COMPLETED_TASKS, []));
+  const [xp, setXp] = useState<number>(() => storage.get(STORAGE_KEYS.XP, 1250));
+  const [dictionary, setDictionary] = useState<DictionaryEntry[]>(() => storage.get(STORAGE_KEYS.DICTIONARY, []));
+  const [history, setHistory] = useState<CalendarHistory>(() => storage.get(STORAGE_KEYS.HISTORY, {}));
 
-  // Persist Todos
-  useEffect(() => {
-    localStorage.setItem('haytham_todos', JSON.stringify(todos));
-  }, [todos]);
+  // Save changes side-effects
+  useEffect(() => storage.set(STORAGE_KEYS.TODOS, todos), [todos]);
+  useEffect(() => storage.set(STORAGE_KEYS.COMPLETED_TASKS, completedTasks), [completedTasks]);
+  useEffect(() => storage.set(STORAGE_KEYS.XP, xp), [xp]);
+  useEffect(() => storage.set(STORAGE_KEYS.DICTIONARY, dictionary), [dictionary]);
+  useEffect(() => storage.set(STORAGE_KEYS.HISTORY, history), [history]);
 
   // Rank Logic
   const getRank = (xp: number) => {
