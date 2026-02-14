@@ -100,7 +100,7 @@ const TechSection: React.FC<Props> = ({ onTaskComplete, completedTasks }) => {
                           <div className="w-3 h-3 rounded-full bg-green-500"></div>
                           <span className="text-xs text-gray-400 ml-2">root@admin-os:~/labs/{activeLesson.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 20)}</span>
                       </div>
-                      <button onClick={() => setActiveLesson(null)}><X size={16} className="text-gray-500 hover:text-white"/></button>
+                      <button type="button" title="Close lab modal" onClick={() => setActiveLesson(null)}><X size={16} className="text-gray-500 hover:text-white"/></button>
                   </div>
                   
                   <div className="p-6 overflow-y-auto custom-scrollbar space-y-8 text-sm text-gray-300">
@@ -114,7 +114,7 @@ const TechSection: React.FC<Props> = ({ onTaskComplete, completedTasks }) => {
                       {/* Commands */}
                       {activeContent.labSteps.length > 0 && (
                           <div className="space-y-4">
-                              <h4 className="text-black font-bold bg-cyan-400 inline-block px-2 py-1 rounded">>> EXECUTE_PROTOCOL: {activeContent.labTitle}</h4>
+                              <h4 className="text-black font-bold bg-cyan-400 inline-block px-2 py-1 rounded">{'>>'} EXECUTE_PROTOCOL: {activeContent.labTitle}</h4>
                               {activeContent.labSteps.map((step, i) => (
                                   <div key={i} className="group">
                                       <div className="flex gap-4">
