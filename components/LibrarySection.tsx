@@ -43,8 +43,7 @@ const LibrarySection: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto pb-24 space-y-8">
-      
+    <div className="max-w-7xl mx-auto pb-24 space-y-8"> 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4 bg-slate-900/50 p-4 rounded-2xl border border-gray-800">
         <div className="flex items-center gap-2 text-gray-400 mr-4">
@@ -177,7 +176,7 @@ const LibrarySection: React.FC = () => {
                                     <ExternalLink size={16}/> OPEN RESOURCE
                                 </a>
                             )}
-                            <button onClick={() => setSelectedItem(null)} className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors">
+                            <button type="button" title="Close" onClick={() => setSelectedItem(null)} className="p-2 hover:bg-gray-800 rounded-lg text-gray-400 hover:text-white transition-colors">
                                 <X size={20} />
                             </button>
                         </div>
