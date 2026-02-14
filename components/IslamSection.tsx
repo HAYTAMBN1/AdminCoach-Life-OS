@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Moon, BookOpen, Calendar, Search, Star, ChevronRight, Loader2, Sunrise, Sun, Sunset, Clock, MapPin, Settings, X, Check } from 'lucide-react';
+import { Moon, BookOpen, Calendar, Search, Star, ChevronRight, Loader2, Sunrise, Sun, Sunset, Clock, MapPin, Settings, X, Check, Bookmark } from 'lucide-react';
 import { Surah } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { storage, STORAGE_KEYS } from '../services/storage';
@@ -80,6 +80,12 @@ const IslamSection: React.FC = () => {
   const [surahs, setSurahs] = useState<Surah[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingQuran, setLoadingQuran] = useState(false);
+  const [lastRead, setLastRead] = useState<number>(() => storage.get(STORAGE_KEYS.LAST_SURAH, 0));
+
+  // Save last read on change
+  useEffect(() => {
+      if (lastRead > 0) storage.set(STORAGE_KEYS.LAST_SURAH, lastRead);
+  }, [lastRead]);
 
   // Fetch Data (Prayer + Calendar)
   useEffect(() => {
@@ -149,6 +155,9 @@ const IslamSection: React.FC = () => {
       <span className="text-2xl font-mono text-cyan-400 font-bold tracking-widest">{time}</span>
     </div>
   );
+
+  // Helper to find last read surah name
+  const lastReadName = surahs.find(s => s.number === lastRead)?.name;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-24 font-arabic" dir="rtl">
@@ -291,6 +300,37 @@ const IslamSection: React.FC = () => {
 
               {activeView === 'QURAN' && (
                   <div className="space-y-6">
+                      
+                      {/* Last Read Banner */}
+                      {lastRead > 0 && (
+                          <motion.div 
+                             initial={{ opacity: 0, y: -10 }}
+                             animate={{ opacity: 1, y: 0 }}
+                             className="bg-gradient-to-r from-green-900/50 to-slate-900 border border-green-500/30 rounded-2xl p-4 flex items-center justify-between shadow-[0_0_15px_rgba(34,197,94,0.1)] relative overflow-hidden"
+                          >
+                              <div className="absolute left-0 top-0 h-full w-1 bg-green-500"></div>
+                              <div className="flex items-center gap-4 z-10">
+                                  <div className="p-3 bg-green-500/20 rounded-xl text-green-400 border border-green-500/30">
+                                      <Bookmark size={24} fill="currentColor" />
+                                  </div>
+                                  <div>
+                                      <p className="text-gray-400 text-xs uppercase tracking-wider font-sans mb-1">متابعة الختمة (Continue Reading)</p>
+                                      <h3 className="text-xl font-bold text-white font-arabic">
+                                          {lastReadName ? `سورة ${lastReadName}` : `سورة رقم ${lastRead}`}
+                                      </h3>
+                                  </div>
+                              </div>
+                              <a 
+                                  href={`https://quran.com/${lastRead}`} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="px-5 py-2.5 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-green-500/20 text-sm flex items-center gap-2 z-10"
+                              >
+                                  <span>أكمل القراءة</span> <ChevronRight size={16} className="rotate-180" />
+                              </a>
+                          </motion.div>
+                      )}
+
                       <div className="relative max-w-xl mx-auto mb-8">
                           <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
                               <Search className="text-green-500" size={20} />
@@ -311,30 +351,49 @@ const IslamSection: React.FC = () => {
                           </div>
                       ) : (
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                              {filteredSurahs.map((surah) => (
-                                  <a 
-                                    href={`https://quran.com/${surah.number}`} 
-                                    target="_blank" 
-                                    rel="noreferrer"
-                                    key={surah.number}
-                                    className="group relative bg-slate-900/60 backdrop-blur-sm border border-gray-800 rounded-2xl p-5 hover:bg-slate-800 hover:border-green-500/50 transition-all duration-300 flex items-center gap-4 overflow-hidden"
-                                  >
-                                      <div className="absolute -right-4 -top-4 text-gray-800 opacity-20 group-hover:opacity-10 group-hover:scale-110 transition-all">
-                                          <Star size={80} />
-                                      </div>
-                                      <div className="relative z-10 w-12 h-12 flex-shrink-0 bg-slate-950 border border-gray-700 rounded-xl flex items-center justify-center text-green-400 font-bold font-mono text-lg group-hover:scale-110 group-hover:border-green-500 transition-transform">
-                                          {surah.number}
-                                      </div>
-                                      <div className="relative z-10 flex-1">
-                                          <h3 className="text-2xl text-white font-bold mb-1 group-hover:text-green-400 transition-colors">{surah.name}</h3>
-                                          <div className="flex items-center justify-between text-xs text-gray-500 font-sans tracking-wide">
-                                              <span>{surah.englishName}</span>
-                                              <span className="bg-gray-800 px-2 py-0.5 rounded text-gray-400">{surah.numberOfAyahs} Āyahs</span>
-                                          </div>
-                                      </div>
-                                      <ChevronRight className="text-gray-700 group-hover:text-white transition-colors" size={20}/>
-                                  </a>
-                              ))}
+                              {filteredSurahs.map((surah) => {
+                                  const isLastRead = lastRead === surah.number;
+                                  return (
+                                    <a 
+                                        href={`https://quran.com/${surah.number}`} 
+                                        target="_blank" 
+                                        rel="noreferrer"
+                                        key={surah.number}
+                                        onClick={() => setLastRead(surah.number)}
+                                        className={`group relative backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 flex items-center gap-4 overflow-hidden ${
+                                            isLastRead 
+                                            ? 'bg-green-900/20 border-green-500 shadow-[0_0_15px_rgba(34,197,94,0.15)]' 
+                                            : 'bg-slate-900/60 border-gray-800 hover:bg-slate-800 hover:border-green-500/50'
+                                        }`}
+                                    >
+                                        <div className="absolute -right-4 -top-4 text-gray-800 opacity-20 group-hover:opacity-10 group-hover:scale-110 transition-all">
+                                            <Star size={80} />
+                                        </div>
+                                        
+                                        {isLastRead && (
+                                            <div className="absolute top-3 left-3 text-green-500 z-20" title="Last Read">
+                                                <Bookmark size={18} fill="currentColor" />
+                                            </div>
+                                        )}
+
+                                        <div className={`relative z-10 w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center font-bold font-mono text-lg group-hover:scale-110 transition-transform border ${
+                                            isLastRead 
+                                            ? 'bg-green-950 text-green-400 border-green-500' 
+                                            : 'bg-slate-950 text-green-400 border-gray-700 group-hover:border-green-500'
+                                        }`}>
+                                            {surah.number}
+                                        </div>
+                                        <div className="relative z-10 flex-1">
+                                            <h3 className={`text-2xl font-bold mb-1 transition-colors ${isLastRead ? 'text-green-400' : 'text-white group-hover:text-green-400'}`}>{surah.name}</h3>
+                                            <div className="flex items-center justify-between text-xs text-gray-500 font-sans tracking-wide">
+                                                <span>{surah.englishName}</span>
+                                                <span className="bg-gray-800 px-2 py-0.5 rounded text-gray-400">{surah.numberOfAyahs} Āyahs</span>
+                                            </div>
+                                        </div>
+                                        <ChevronRight className={`transition-colors ${isLastRead ? 'text-green-500' : 'text-gray-700 group-hover:text-white'}`} size={20}/>
+                                    </a>
+                                  );
+                              })}
                           </div>
                       )}
                   </div>

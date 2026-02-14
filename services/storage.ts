@@ -24,5 +24,6 @@ export const STORAGE_KEYS = {
   COMPLETED_TASKS: 'admin_completed_tasks',
   DICTIONARY: 'admin_dictionary',
   HISTORY: 'admin_history',
-  CITY: 'admin_city'
+  CITY: 'admin_city',
+  LAST_SURAH: 'admin_last_surah'
 };
